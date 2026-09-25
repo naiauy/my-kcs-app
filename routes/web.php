@@ -2,16 +2,6 @@
 
 use App\Http\Controllers\Web\ProductController;
 
-Route::get('/', [ProductController::class, 'index']);
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-
-// เส้นทางแบบ Dynamic `{id}` หมายถึงจะเปลี่ยนไปตาม ID ของสินค้าที่กดดู
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
-
-
-
 use App\Http\Controllers\Web\CartController;
 // หน้าเปิดดูตะกร้าสินค้า
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -39,14 +29,40 @@ Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->na
 
 use App\Http\Controllers\Web\OrderController;
 
-// ดูรายการคำสั่งซื้อทั้งหมด
-Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+// // ดูรายการคำสั่งซื้อทั้งหมด
+// Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
-// ดูรายละเอียดเจาะลึกเฉพาะออเดอร์นั้นๆ
-Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-
-
+// // ดูรายละเอียดเจาะลึกเฉพาะออเดอร์นั้นๆ
+// Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
 
 
+// ---------------------------------------------------------------
+// 🔐 2. หน้าสำหรับเจ้าของร้าน/Admin (ต้อง Login ก่อนเท่านั้น)
+// ---------------------------------------------------------------
+Route::middleware(['auth'])->group(function () {
 
+    // 🎯 หน้า Dashboard สำหรับแอดมิน
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
+    // หน้าสร้างสินค้าใหม่
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+
+    // หน้าดูรายการคำสั่งซื้อ
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+});
+
+// ---------------------------------------------------------------
+// 🔑 3. ดึง Route การ Login/Logout ของ Breeze เข้ามาใช้งาน
+// ---------------------------------------------------------------
+require __DIR__ . '/auth.php';
+Route::get('/', [ProductController::class, 'index']);
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+// Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+
+// เส้นทางแบบ Dynamic `{id}` หมายถึงจะเปลี่ยนไปตาม ID ของสินค้าที่กดดู
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');

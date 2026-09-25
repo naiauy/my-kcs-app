@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="th">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มสินค้าใหม่หลังบ้าน</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+@section('title', 'แผงควบคุมแอดมิน - KCS SHOP')
 
-<body class="bg-gray-50 text-gray-900 min-h-screen py-12">
+@section('content')
 
     <div class="max-w-3xl mx-auto px-4">
         <!-- บล็อกแจ้งเตือน Success / Error -->
@@ -30,6 +24,18 @@
                 @csrf
 
                 <!-- ส่วนข้อมูลสินค้าหลัก -->
+                <!-- 📂 ช่องเลือกหมวดหมู่สินค้า (Category Select) -->
+                <div class="space-y-2">
+                    <label for="category_id" class="block text-sm font-semibold text-gray-950">หมวดหมู่สินค้า <span class="text-red-500">*</span></label>
+                    <select name="category_id" id="category_id" required
+                        class="w-full border border-gray-200 rounded-xl p-3 text-sm bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700">
+                        <option value="" disabled selected>-- เลือกหมวดหมู่สินค้า --</option>
+
+                        @foreach($categories as $category)
+                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <!-- ค้นหาท่อนกรอกชื่อและราคา แล้วปรับให้มีช่องสต็อกเพิ่มเข้ามาแบบนี้ครับ -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -72,14 +78,23 @@
 
                     <!-- กล่องบรรจุแถวตัวเลือก (จะถูกเพิ่มด้วย JavaScript) -->
                     <div id="options-container" class="space-y-3">
-                        <!-- แถวเริ่มต้นแถวแรกสุดเป็นตัวอย่างให้แอดมินใช้ง่ายขึ้น -->
-                        <div class="flex items-center space-x-2 option-row bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                            <select name="options[0][type]" class="border border-gray-200 rounded-lg p-2 text-sm bg-white focus:outline-none">
-                                <option value="color">สี (Color)</option>
-                                <option value="size">ขนาด / ความจุ (Size)</option>
-                            </select>
-                            <input type="text" name="options[0][value]" class="flex-1 border border-gray-200 rounded-lg p-2 text-sm focus:outline-none" placeholder="เช่น สีขาวมินิมอล หรือ Size XL">
-                            <button type="button" class="text-red-500 hover:text-red-700 font-medium text-sm px-2 remove-option-btn">ลบ</button>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 items-center option-row">
+                            <div>
+                                <select name="options[0][type]" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white">
+                                    <option value="color">สี (Color)</option>
+                                    <option value="size">ขนาด / ความจุ (Size)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <input type="text" name="options[0][value]" class="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="ชื่อตัวเลือก เช่น สีขาว / 256GB" >
+                            </div>
+                            <div>
+                                <input type="number" name="options[0][price_modifier]" step="0.01" class="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="ราคาบวกเพิ่ม (บาท) เช่น 0 หรือ 50">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="file" name="options_images[0]" class="w-full text-xs text-gray-500 cursor-pointer">
+                                <button type="button" class="text-red-500 hover:text-red-700 font-medium text-sm remove-option-btn">ลบ</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -100,29 +115,29 @@
         const container = document.getElementById('options-container');
         const addBtn = document.getElementById('add-option-btn');
 
-        // เมื่อกดปุ่ม "เพิ่มแถวตัวเลือก"
         addBtn.addEventListener('click', () => {
             const row = document.createElement('div');
-            row.className = 'flex items-center space-x-2 option-row bg-gray-50/50 p-3 rounded-xl border border-gray-100';
+            row.className = 'grid grid-cols-1 md:grid-cols-4 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 items-center option-row';
             row.innerHTML = `
-                <select name="options[${optionIndex}][type]" class="border border-gray-200 rounded-lg p-2 text-sm bg-white focus:outline-none">
-                    <option value="color">สี (Color)</option>
-                    <option value="size">ขนาด / ความจุ (Size)</option>
-                </select>
-                <input type="text" name="options[${optionIndex}][value]" class="flex-1 border border-gray-200 rounded-lg p-2 text-sm focus:outline-none" placeholder="ระบุตัวเลือก...">
-                <button type="button" class="text-red-500 hover:text-red-700 font-medium text-sm px-2 remove-option-btn">ลบ</button>
-            `;
+        <div>
+            <select name="options[${optionIndex}][type]" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white">
+                <option value="color">สี (Color)</option>
+                <option value="size">ขนาด / ความจุ (Size)</option>
+            </select>
+        </div>
+        <div>
+            <input type="text" name="options[${optionIndex}][value]" class="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="ระบุตัวเลือก..." required>
+        </div>
+        <div>
+            <input type="number" name="options[${optionIndex}][price_modifier]" step="0.01" class="w-full border border-gray-200 rounded-lg p-2 text-sm" placeholder="ราคาบวกเพิ่ม...">
+        </div>
+        <div class="flex items-center space-x-2">
+            <input type="file" name="options_images[${optionIndex}]" class="w-full text-xs text-gray-500 cursor-pointer">
+            <button type="button" class="text-red-500 hover:text-red-700 font-medium text-sm remove-option-btn">ลบ</button>
+        </div>
+    `;
             container.appendChild(row);
             optionIndex++;
         });
-
-        // เมื่อกดปุ่ม "ลบแถวตัวเลือก"
-        container.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-option-btn')) {
-                e.target.closest('.option-row').remove();
-            }
-        });
     </script>
-</body>
-
-</html>
+@endsection

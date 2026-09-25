@@ -50,7 +50,7 @@
             <!-- ฝั่งขวา: สรุปรายการในตะกร้า -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-fit space-y-4">
                 <h2 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">สรุปรายการสินค้า</h2>
-                @php $total = 0; @endphp
+                @php $total = 0; $delivery_fee = 35; @endphp
                 <div class="divide-y divide-gray-100 max-h-60 overflow-y-auto pr-1">
                     @foreach($cart as $item)
                         @php $total += $item['price'] * $item['quantity']; @endphp
@@ -62,6 +62,19 @@
                             <span class="font-semibold text-gray-800 shrink-0">฿{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                         </div>
                     @endforeach
+                    @php
+                        if($total > 300) {
+                            $delivery_fee += 15;
+                        }    
+                    $total += $delivery_fee;
+                    @endphp
+                     <div class="flex justify-between py-3 text-sm">
+                            <div class="pr-4">
+                                <p class="font-medium text-gray-800 line-clamp-1">ค่าบริการจัดส่งสินค้า</p>
+                                <p class="text-gray-400 text-xs"></p>
+                            </div>
+                            <span class="font-semibold text-gray-800 shrink-0">฿{{ number_format($delivery_fee, 2) }}</span>
+                        </div>
                 </div>
                 <div class="border-t border-gray-100 pt-4 flex justify-between items-baseline">
                     <span class="text-gray-500 font-medium">ยอดรวมทั้งสิ้น:</span>

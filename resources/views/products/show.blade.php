@@ -1,29 +1,8 @@
-<!DOCTYPE html>
-<html lang="th">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $product->name }} - MY SHOP</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+@section('title', 'รายการสินค้าทั้งหมด - KCS SHOP')
 
-<body class="bg-gray-50 font-sans">
-
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-xl font-bold text-blue-600 tracking-wide">
-                    <a href="{{ route('products.index') }}">📦 MY SHOP</a>
-                </div>
-                <div class="space-x-4">
-                    <a href="{{ route('products.index') }}" class="text-gray-600 hover:text-blue-600">สินค้าทั้งหมด</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+@section('content')
     <!-- Product Detail Container -->
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
@@ -110,7 +89,10 @@
                         <h1 class="text-3xl font-bold text-gray-950 mb-4">{{ $product->name }}</h1>
 
                         <div class="flex items-baseline space-x-4 mb-6">
-                            <span class="text-3xl font-extrabold text-blue-600">฿{{ number_format($product->price, 2) }}</span>
+                            <!-- <span class="text-3xl font-extrabold text-blue-600">฿{{ number_format($product->price, 2) }}</span> -->
+                            <span id="product-display-price" data-base-price="{{ $product->price }}" class="text-2xl font-bold text-blue-600">
+                                {{ number_format($product->price, 2) }} บาท
+                            </span>
                             <span class="text-sm text-gray-400">สินค้าคงเหลือในคลัง: {{ $product->stock }} ชิ้น</span>
                         </div>
 
@@ -126,6 +108,37 @@
                     <!-- ค้นหาและแทนที่ส่วนปุ่มแอคชันด้วยโค้ดชุดนี้ -->
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <form action="{{ route('cart.add', $product->id) }}" method="POST" class="space-y-6">
+                            <!-- 💡 กล่องแจ้งเตือนเมื่อเพิ่มสินค้าลงตะกร้าสำเร็จ -->
+                            @if(session('success'))
+                            <div id="toast-success" class="fixed top-5 right-5 z-50 flex items-center w-full max-w-xs p-4 text-gray-900 bg-white rounded-2xl border border-gray-100 shadow-xl transition-all duration-500 transform translate-y-0" role="alert">
+                                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-50 rounded-lg">
+                                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+                                    </svg>
+                                </div>
+                                <div class="ms-3 text-sm font-semibold text-gray-800">{{ session('success') }}</div>
+                                <button type="button" onclick="closeToast()" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-950 rounded-lg p-1.5 inline-flex items-center justify-center h-8 w-8 focus:outline-none">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- สคริปต์สั่งให้ Popup (Toast) หายไปเองอัตโนมัติภายใน 3 วินาที -->
+                            <script>
+                                function closeToast() {
+                                    const toast = document.getElementById('toast-success');
+                                    if (toast) {
+                                        toast.style.opacity = '0';
+                                        setTimeout(() => toast.remove(), 500);
+                                    }
+                                }
+                                // ตั้งเวลา 3000 มิลลิวินาที (3 วินาที) แล้วให้เฟดปิดตัวเอง
+                                setTimeout(closeToast, 3000);
+                            </script>
+                            @endif
+
                             @csrf
 
                             @php
@@ -139,13 +152,22 @@
                                 <label class="block text-sm font-semibold text-gray-950 mb-2">เลือกสี</label>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($colors as $index => $color)
+                                    @php
+                                    $optImg = $color->option_image ? asset('storage/' . $color->option_image) : null;
+                                    @endphp
                                     <label class="relative cursor-pointer">
                                         <!-- ซ่อน Radio Input ตัวจริงไว้หลังบ้าน -->
-                                        <input type="radio" name="options[color]" value="{{ $color->option_value }}" class="peer sr-only" {{ $index === 0 ? 'checked' : '' }}>
+                                        <!-- <input type="radio" name="options[color]" value="{{ $color->option_value }}" class="peer sr-only" {{ $index === 0 ? 'checked' : '' }}> -->
+                                        <input type="radio" name="options[color]"
+                                            value="{{ $color->option_value }}"
+                                            data-price="{{ $color->price_modifier }}"
+                                            data-image="{{ $optImg }}"
+                                            class="peer sr-only option-picker" {{ $index === 0 ? 'checked' : '' }}>
 
                                         <!-- ปุ่มกดจำลองที่จะเปลี่ยนสีตามสถานะการเลือก (Peer State) -->
                                         <div class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-700 bg-white shadow-sm hover:bg-gray-50 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all">
                                             {{ $color->option_value }}
+                                            @if($color->price_modifier > 0) (+{{ number_format($color->price_modifier) }}฿) @endif
                                         </div>
                                     </label>
                                     @endforeach
@@ -161,11 +183,15 @@
                                     @foreach($sizes as $index => $size)
                                     <label class="relative cursor-pointer">
                                         <!-- ซ่อน Radio Input ตัวจริงไว้หลังบ้าน -->
-                                        <input type="radio" name="options[size]" value="{{ $size->option_value }}" class="peer sr-only" {{ $index === 0 ? 'checked' : '' }}>
+                                        <input type="radio" name="options[size]"
+                                            value="{{ $size->option_value }}"
+                                            data-price="{{ $size->price_modifier }}"
+                                            class="peer sr-only option-picker" {{ $index === 0 ? 'checked' : '' }}>
 
                                         <!-- ปุ่มกดจำลองที่จะเปลี่ยนสีตามสถานะการเลือก -->
                                         <div class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-700 bg-white shadow-sm hover:bg-gray-50 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all">
                                             {{ $size->option_value }}
+                                            @if($size->price_modifier > 0) (+{{ number_format($size->price_modifier) }}฿) @endif
                                         </div>
                                     </label>
                                     @endforeach
@@ -192,7 +218,39 @@
             </div>
         </div>
     </main>
+<script>
+    document.querySelectorAll('.option-picker').forEach(input => {
+        input.addEventListener('change', updateProductDetails);
+    });
 
-</body>
+    function updateProductDetails() {
+        const priceDisplay = document.getElementById('product-display-price');
+        const mainImage = document.getElementById('current-main-image');
 
-</html>
+        let basePrice = parseFloat(priceDisplay.getAttribute('data-base-price'));
+        let additionalPrice = 0;
+
+        // วนลูปเช็กวิทยุทุกตัวที่ถูกเลือก (Checked) เพื่อนำราคาบวกเพิ่มมารวมกัน
+        document.querySelectorAll('.option-picker:checked').forEach(checkedInput => {
+            // รวมราคาบวกเพิ่ม
+            additionalPrice += parseFloat(checkedInput.getAttribute('data-price') || 0);
+
+            // ถ้าตัวเลือกนั้นเป็นสีและมีรูปภาพเฉพาะตัว ให้สลับรูปภาพหลักทันที
+            let optionImg = checkedInput.getAttribute('data-image');
+            if (optionImg && optionImg !== 'null' && optionImg !== '') {
+                mainImage.src = optionImg;
+            }
+        });
+
+        // อัปเดตราคาแสดงผลรวมบนหน้าจอ
+        let finalPrice = basePrice + additionalPrice;
+        priceDisplay.innerText = finalPrice.toLocaleString('th-TH', {
+            minimumFractionDigits: 2
+        }) + ' บาท';
+    }
+
+    // รันครั้งแรกเพื่อให้ราคาตั้งต้นอัปเดตอัตโนมัติ
+    document.addEventListener('DOMContentLoaded', updateProductDetails);
+</script>
+
+@endsection

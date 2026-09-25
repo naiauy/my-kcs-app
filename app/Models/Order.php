@@ -17,6 +17,8 @@ class Order extends Model
         'payment_method',
         'total_amount',
         'status',
+        'delivery_fee', // เพิ่มคอลัมน์นี้เพื่อเก็บค่าจัดส่ง
+        'order_amount',
     ];
 
     // ความสัมพันธ์กับรายการสินค้าในใบสั่งซื้อ (มีอยู่เดิมแล้ว)

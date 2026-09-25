@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
@@ -13,23 +16,38 @@ class CartController extends Controller
     {
         // ดึงข้อมูลตะกร้าสินค้าจาก Session (ถ้าไม่มีให้เป็นอาร์เรย์ว่าง)
         $cart = session()->get('cart', []);
+        $categories = Cache::remember('global_product_categories', 86400, function () {
+            return Category::all();
+        });
 
-        return view('cart.index', compact('cart'));
+        return view('cart.index', compact('cart', 'categories'));
     }
 
     // 2. ฟังก์ชันเพิ่มสินค้าลงตะกร้า
+    // ใน CartController.php ท่อนที่สั่งแอดสินค้าลงตะกร้า
     public function add(Request $request, $id)
     {
         $product = Product::findOrFail($id);
         $quantity = $request->input('quantity', 1);
+        $options = $request->input('options', []); // อาร์เรย์ที่ส่งมา เช่น ['color' => 'สีขาว', 'size' => '256GB']
 
-        // รับค่าตัวเลือกที่ลูกค้ากดส่งมา (เช่น ['color' => 'สีแดง', 'size' => 'L'])
-        $selectedOptions = $request->input('options', []);
+        $finalPrice = $product->price;
+        $optionStrings = [];
 
-        // สร้างข้อความสรุปออปชัน เช่น "สีแดง, L"
-        $optionString = !empty($selectedOptions) ? implode(', ', $selectedOptions) : '';
+        // ดึงค่าราคาบวกเพิ่มของออปชันแต่ละตัวจากฐานข้อมูลมาคำนวณจริงหลังบ้านเพื่อความปลอดภัย
+        foreach ($options as $type => $value) {
+            $optionRecord = \App\Models\ProductOption::where('product_id', $id)
+                ->where('option_type', $type)
+                ->where('option_value', $value)
+                ->first();
 
-        // สร้างคีย์ประจำตัวสินค้าในตะกร้าโดยพ่วง Option ไปด้วย (ป้องกันไม่ให้ไปสมทบกับสีอื่น)
+            if ($optionRecord) {
+                $finalPrice += $optionRecord->price_modifier; // บวกเพิ่มราคาเข้าไปในค่าตัวนี้
+                $optionStrings[] = "{$optionRecord->option_value}";
+            }
+        }
+
+        $optionString = implode(', ', $optionStrings);
         $cartKey = $id . '_' . md5($optionString);
 
         $cart = session()->get('cart', []);
@@ -38,16 +56,16 @@ class CartController extends Controller
             $cart[$cartKey]['quantity'] += $quantity;
         } else {
             $cart[$cartKey] = [
-                "id" => $product->id, // ID สินค้าหลัก
+                "id" => $product->id,
                 "name" => $product->name,
                 "quantity" => $quantity,
-                "price" => $product->price,
-                "options" => $optionString // 💡 พ่วงข้อมูลออปชันเก็บไว้ใน Session ตะกร้า
+                "price" => $finalPrice, // 🎯 ใช้ราคาที่บวกรวมราคา Option เรียบร้อยแล้วเข้าไปเก็บในตะกร้า
+                "options" => $optionString
             ];
         }
 
         session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'เพิ่มสินค้าลงตะกร้าเรียบร้อย!');
+        return redirect()->back()->with('success', 'เพิ่มลงตะกร้าเรียบร้อย!');
     }
 
     // 3. ฟังก์ชันลบสินค้าออกจากตะกร้า

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
@@ -40,12 +41,14 @@ class CheckoutController extends Controller
 
         // คำนวณยอดเงินรวมสุทธิ
         $totalAmount = 0;
-        foreach ($cart as $item) {
+          foreach ($cart as $item) {
             $totalAmount += $item['price'] * $item['quantity'];
         }
 
+        $deliveryFee = $totalAmount > 300 ? 50 : 35; // กำหนดค่าจัดส่งเป็น 35 บาทหรือ 50 บาทตามยอดรวม
+        $orderAmount = $totalAmount + $deliveryFee; // ยอดรวมสุทธิ
         // 💡 ปรับปรุงตรงนี้: สั่งให้ตัวแปร $order มารับค่าที่ return ออกมาจาก DB::transaction
-        $order = DB::transaction(function () use ($request, $cart, $totalAmount) {
+        $order = DB::transaction(function () use ($request, $cart, $totalAmount, $deliveryFee, $orderAmount) {
             // 1. บันทึกลงตาราง orders
             $newOrder = Order::create([
                 'customer_name' => $request->customer_name,
@@ -53,7 +56,9 @@ class CheckoutController extends Controller
                 'shipping_address' => $request->shipping_address,
                 'payment_method' => $request->payment_method ?? 'qr_code',
                 'total_amount' => $totalAmount,
-                'status' => 'pending'
+                'status' => 'pending',
+                'delivery_fee' => $deliveryFee, // 💡 เพิ่มคอลัมน์นี้เพื่อเก็บค่าจัดส่ง
+                'order_amount' => $orderAmount, // 💡 เพิ่มคอลัมน์นี้เพื่อเก็บยอดรวมสุทธิ
             ]);
 
             // 2. วนลูปบันทึกสินค้าลงตาราง order_items

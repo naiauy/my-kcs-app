@@ -12,6 +12,7 @@ class Product extends Model
     // // รายชื่อคอลัมน์ที่อนุญาตให้กรอกข้อมูล (อันเดิมที่มีอยู่แล้ว)
 
     protected $fillable = [
+        'category_id',
         'name',
         'slug',
         'description',
@@ -32,5 +33,11 @@ class Product extends Model
     public function options()
     {
         return $this->hasMany(ProductOption::class);
+    }
+
+    // app/Models/Product.php
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

@@ -1,29 +1,8 @@
-<!DOCTYPE html>
-<html lang="th">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตะกร้าสินค้า - MY SHOP</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+@section('title', 'รายการสินค้าทั้งหมด - KCS SHOP')
 
-<body class="bg-gray-50 font-sans">
-
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="text-xl font-bold text-blue-600 tracking-wide">
-                    <a href="{{ route('products.index') }}">📦 MY SHOP</a>
-                </div>
-                <div>
-                    <a href="{{ route('products.index') }}" class="text-gray-600 hover:text-blue-600">กลับไปเลือกซื้อสินค้า</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+@section('content')
     <!-- เนื้อหาหลัก -->
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 class="text-2xl font-bold text-gray-800 mb-8">📥 ตะกร้าสินค้าของคุณ</h1>
@@ -118,6 +97,4 @@
         @endif
     </main>
 
-</body>
-
-</html>
+@endsection
